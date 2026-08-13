@@ -1162,18 +1162,20 @@ foreach (var Iter in MorphConsumeNode.Nodes)
         void LoadFamiliar()
         {
 
-            if (Arc.CharacterWz.GetNode("Familiar") == null)
-            {
-                MessageBox.Show("Familiar  not found");
-                return;
-            }
+           var FamiliarDir = Arc.GetCharacterNode("Familiar");
+
+if (FamiliarDir == null)
+{
+    MessageBox.Show("Familiar not found");
+    return;
+}
             Wz_Node CardEntry;
             Bitmap MobPic = null, Icon = null;
             string CardID = "", MobID = "";
-            foreach (var img in Arc.CharacterWz.GetNode("Familiar").Nodes)
+           foreach (var img in FamiliarDir.Nodes)
             {
                 var ID = img.ImgID();
-                var Entry = Arc.CharacterWz.GetNode("Familiar/" + img.Text);
+                var Entry = Arc.GetCharacterNode("Familiar/" + img.Text);
                 if (Entry.GetNode("info/MobID") != null)
                     MobID = Entry.GetNode("info/MobID").Value.ToString().PadLeft(7, '0');
                 else if (Arc.EtcWz.GetNode("FamiliarInfo.img") != null)
@@ -1181,27 +1183,15 @@ foreach (var Iter in MorphConsumeNode.Nodes)
 
                 DumpData2(Entry.GetNode("info"));
 
-                if (Arc.MobWz.GetNode(MobID + ".img") != null)
-                {
-                    if (Arc.MobWz.GetNode(MobID + ".img/stand/0") != null)
-                        MobPic = Arc.MobWz.GetNode(MobID + ".img/stand/0").ExtractPng2();
-                    else if (Arc.MobWz.GetNode(MobID + ".img/fly/0") != null)
-                        MobPic = Arc.MobWz.GetNode(MobID + ".img/fly/0").ExtractPng2();
-                }
-                else if ((Arc.Mob001Wz != null) && (Arc.Mob001Wz.GetNode(MobID + ".img") != null))
-                {
-                    if (Arc.Mob001Wz.GetNode(MobID + ".img/stand/0") != null)
-                        MobPic = Arc.Mob001Wz.GetNode(MobID + ".img/stand/0").ExtractPng2();
-                    else if (Arc.Mob001Wz.GetNode(MobID + ".img/fly/0") != null)
-                        MobPic = Arc.Mob001Wz.GetNode(MobID + ".img/fly/0").ExtractPng2();
-                }
-                else if (Arc.Mob2Wz.GetNode(MobID + ".img") != null)
-                {
-                    if (Arc.Mob2Wz.GetNode(MobID + ".img/stand/0") != null)
-                        MobPic = Arc.Mob2Wz.GetNode(MobID + ".img/stand/0").ExtractPng2();
-                    else if (Arc.Mob2Wz.GetNode(MobID + ".img/fly/0") != null)
-                        MobPic = Arc.Mob2Wz.GetNode(MobID + ".img/fly/0").ExtractPng2();
-                }
+                var MobImageNode = Arc.GetMobNode(MobID + ".img/stand/0");
+
+if (MobImageNode == null)
+    MobImageNode = Arc.GetMobNode(MobID + ".img/fly/0");
+
+if (MobImageNode != null)
+    MobPic = MobImageNode.ExtractPng2();
+else
+    MobPic = null;
                 string SkillID = "";
                 if (Entry.GetNode("info/skill") != null)
                     SkillID = Entry.GetNode("info/skill").GetValue2("id", "");
@@ -2077,8 +2067,10 @@ else
                     break;
 
                 case 27:
-                    if (Arc.ItemWz == null) return null;
-                    if (Arc.ItemWz.GetNode("Install/03010.img") != null)
+                    if (Arc.ItemWzList == null || Arc.ItemWzList.Count == 0)
+    return null;
+
+if (Arc.GetItemNode("Install/03010.img") != null)
                     {
                         switch (LeftStr(ID, 5))
                         {
@@ -2374,12 +2366,12 @@ else
 
                     if (tabIndex == 16 || tabIndex == 17 || tabIndex == 18)
                     {
-                        Wz_Node imgNode=null;
-                        if(Arc.Map002Wz!= null &&  Arc.Map002Wz.GetNode("Map")!=null)
-                           imgNode = Arc.Map002Wz.WzNode.FindNodeByPath("Map\\Map" + LeftStr(SelectID, 1) + "\\" + SelectID + ".img");
-                        else if(Arc.MapWz.GetNode("Map")!=null)
-                            imgNode = Arc.MapWz.WzNode.FindNodeByPath("Map\\Map" + LeftStr(SelectID, 1) + "\\" + SelectID + ".img");
-                        ShowMap(imgNode);
+                        Wz_Node imgNode = Arc.GetMapNode(
+    "Map/Map" + LeftStr(SelectID, 1) + "/" + SelectID + ".img"
+);
+
+if (imgNode != null)
+    ShowMap(imgNode);
                       
                     }
                     else if(tabIndex==39)
@@ -2431,12 +2423,12 @@ else
 
                     if (tabIndex == 16 || tabIndex == 17 || tabIndex == 18)
                     {
-                        Wz_Node imgNode = null;
-                        if (Arc.Map002Wz != null && Arc.Map002Wz.GetNode("Map") != null)
-                            imgNode = Arc.Map002Wz.WzNode.FindNodeByPath("Map\\Map" + LeftStr(SelectID, 1) + "\\" + SelectID + ".img");
-                        else if (Arc.MapWz.GetNode("Map") != null)
-                            imgNode = Arc.MapWz.WzNode.FindNodeByPath("Map\\Map" + LeftStr(SelectID, 1) + "\\" + SelectID + ".img");
-                        ShowMap(imgNode);
+                        Wz_Node imgNode = Arc.GetMapNode(
+    "Map/Map" + LeftStr(SelectID, 1) + "/" + SelectID + ".img"
+);
+
+if (imgNode != null)
+    ShowMap(imgNode);
 
                     }
                     else
