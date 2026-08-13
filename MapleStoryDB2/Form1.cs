@@ -557,33 +557,61 @@ foreach (var Iter in ItemImgNode.Nodes)
                     ColList1.Add(" " + h1);
             }
 
-            if ((Dir == "TamingMob") && (Arc.Skill001Wz != null))
+            if ((Dir == "TamingMob") &&
+    (Arc.SkillWzList != null) &&
+    (Arc.SkillWzList.Count > 0))
             {
                 var Dict = new Dictionary<string, string>();
-                for (int i = 11; i <= 28; i++)
-                {
-                    if (Arc.Skill001Wz.GetNode("8000" + i.ToString() + ".img") != null)
-                    {
-                        foreach (var Iter in Arc.Skill001Wz.GetNode("8000" + i.ToString() + ".img/skill").Nodes)
-                        {
-                            if ((Iter.GetNode("vehicleID") != null) && (!Dict.ContainsKey("0" + Iter.GetNode("vehicleID").Value.ToString())))
-                                Dict.Add("0" + Iter.GetNode("vehicleID").Value.ToString(), Iter.Text);
+              for (int i = 11; i <= 28; i++)
+{
+    var SkillListNode = Arc.GetSkillNode(
+        "8000" + i.ToString() + ".img/skill"
+    );
 
-                        }
-                    }
-                }
+    if (SkillListNode == null)
+        continue;
+
+    foreach (var Iter in SkillListNode.Nodes)
+    {
+        if ((Iter.GetNode("vehicleID") != null) &&
+            (!Dict.ContainsKey(
+                "0" +
+                Iter.GetNode("vehicleID").Value.ToString()
+            )))
+        {
+            Dict.Add(
+                "0" +
+                Iter.GetNode("vehicleID").Value.ToString(),
+                Iter.Text
+            );
+        }
+    }
+}
                 for (int i = 0; i <= 9; i++)
-                {
-                    if (Arc.Skill001Wz.GetNode("80011" + i.ToString() + ".img") != null)
-                    {
-                        foreach (var Iter in Arc.Skill001Wz.GetNode("80011" + i.ToString() + ".img/skill").Nodes)
-                        {
-                            if ((Iter.GetNode("vehicleID") != null) && (!Dict.ContainsKey("0" + Iter.GetNode("vehicleID").Value.ToString())))
-                                Dict.Add("0" + Iter.GetNode("vehicleID").Value.ToString(), Iter.Text);
+{
+    var SkillListNode = Arc.GetSkillNode(
+        "80011" + i.ToString() + ".img/skill"
+    );
 
-                        }
-                    }
-                }
+    if (SkillListNode == null)
+        continue;
+
+    foreach (var Iter in SkillListNode.Nodes)
+    {
+        if ((Iter.GetNode("vehicleID") != null) &&
+            (!Dict.ContainsKey(
+                "0" +
+                Iter.GetNode("vehicleID").Value.ToString()
+            )))
+        {
+            Dict.Add(
+                "0" +
+                Iter.GetNode("vehicleID").Value.ToString(),
+                Iter.Text
+            );
+        }
+    }
+}
                 for (int i = 0; i < Grid.RowCount - 1; i++)
                 {
                     // if (Grid[0, i].Value is string)
@@ -823,9 +851,9 @@ foreach (var Iter in ItemImgNode.Nodes)
         }
         void LoadMob(int Part)
         {
-
             var ToName = new Dictionary<string, string>();
             var Category = new Dictionary<string, string>();
+
             Category.Add("1", "動物型");
             Category.Add("2", "植物型");
             Category.Add("3", "魚類型");
@@ -857,92 +885,162 @@ foreach (var Iter in ItemImgNode.Nodes)
             ToName.Add("charismaEXP", "領導經驗:");
             ToName.Add("hpRecovery", "每10秒HP回復:");
             ToName.Add("mpRecovery", "每10秒MP回復:");
+
             var Links = new List<(string, int)>();
-            Wz_Node Child = null;
-            Wz_Structure WzArchive = null;
-            switch (Part)
+            var MobArchives = new List<Wz_Structure>();
+
+            // 保留原本三個頁籤的概念：
+            //
+            // Part 1 = Mob.wz
+            // Part 2 = Mob001.wz
+            // Part 3 = Mob2.wz + Mob3.wz + Mob4.wz + ...
+            foreach (Wz_Structure wz in Arc.MobWzList)
             {
-                case 1:
-                    WzArchive = Arc.MobWz;
-                    break;
-                case 2:
-                    WzArchive = Arc.Mob001Wz;
-                    break;
-                case 3:
-                    WzArchive = Arc.Mob2Wz;
-                    break;
-            }
-            var Row = -1;
-            string Data = "", D = "";
-            Bitmap Icon = null;
-            foreach (var Iter in WzArchive.Nodes())
-            {
-                if (RightStr(Iter.Text, 4) != ".img")
+                if (wz == null)
                     continue;
-                Row += 1;
-                if (WzArchive.GetNode(Iter.Text + "/stand/0") != null)
-                    Child = WzArchive.GetNode(Iter.Text + "/stand/0");
-                else if (WzArchive.GetNode(Iter.Text + "/fly/0") != null)
-                    Child = WzArchive.GetNode(Iter.Text + "/fly/0");
-                DumpData1();
-                DumpData2(WzArchive.GetNode(Iter.Text));
-                if (Child != null)
-                    Icon = Child.ExtractPng2();
-                Grid.Rows.Add(Iter.ImgID(), Icon, Arc.StringWz.GetNode("Mob.img/" + Iter.ImgID().IDString()).GetValue2("name", ""), "");
 
-                //return;
-                var Link = Iter.GetNode("info/link");
-                if (Link != null)
-                    Links.Add((Link.Value.ToString() + ".img", Row));
-
-                foreach (var Iter2 in WzArchive.GetNode(Iter.Text + "/info").Nodes)
+                if (Part == 1)
                 {
-                    if ((Iter2.Text == "category") && (Category.ContainsKey(Iter2.ValueToStr())))
-                        Data = Category[Iter2.ValueToStr()];
-
-                    else if (Iter2.Text == "elemAttr")
-                        Data = ElemName(Iter2.ValueToStr());
-
-                    else if ((Iter2.Text == "boss") || (Iter2.Text == "firstAttack"))
-                        Data = "";
-                    else
-                        Data = Iter2.ValueToStr();
-
-                    if ((Iter2.Text == "PDRate") || (Iter2.Text == "MDRate"))
-                        D = "%";
-                    else
-                        D = "";
-
-                    if (ToName.ContainsKey(Iter2.Text))
-                        // Grid.Cells[4 + Col, Row] := ToName[Iter2.Name] + Data + D + ',  ';
-                        ColList1.Add(ToName[Iter2.Text] + Data + D + ",  ");
-
+                    if (wz == Arc.MobWz)
+                        MobArchives.Add(wz);
                 }
-
+                else if (Part == 2)
+                {
+                    if (Arc.Mob001Wz != null && wz == Arc.Mob001Wz)
+                        MobArchives.Add(wz);
+                }
+                else if (Part == 3)
+                {
+                    if (wz != Arc.MobWz && wz != Arc.Mob001Wz)
+                        MobArchives.Add(wz);
+                }
             }
 
+            if (MobArchives.Count == 0)
+                return;
+
+            var Row = -1;
+            string Data = "";
+            string D = "";
+            Bitmap Icon = null;
+
+            foreach (Wz_Structure WzArchive in MobArchives)
+            {
+                foreach (var Iter in WzArchive.Nodes())
+                {
+                    if (RightStr(Iter.Text, 4) != ".img")
+                        continue;
+
+                    Row += 1;
+
+                    Wz_Node Child = Iter.GetNode("stand/0");
+
+                    if (Child == null)
+                        Child = Iter.GetNode("fly/0");
+
+                    if (Child != null)
+                        Icon = Child.ExtractPng2();
+                    else
+                        Icon = null;
+
+                    DumpData1();
+                    DumpData2(Iter);
+
+                    string MobName = "";
+                    var MobString = Arc.StringWz.GetNode(
+                        "Mob.img/" + Iter.ImgID().IDString()
+                    );
+
+                    if (MobString != null)
+                        MobName = MobString.GetValue2("name", "");
+
+                    Grid.Rows.Add(
+                        Iter.ImgID(),
+                        Icon,
+                        MobName,
+                        ""
+                    );
+
+                    var Link = Iter.GetNode("info/link");
+
+                    if (Link != null)
+                        Links.Add((
+                            Link.Value.ToString() + ".img",
+                            Row
+                        ));
+
+                    var InfoNode = Iter.GetNode("info");
+
+                    if (InfoNode != null)
+                    {
+                        foreach (var Iter2 in InfoNode.Nodes)
+                        {
+                            if ((Iter2.Text == "category") &&
+                                (Category.ContainsKey(Iter2.ValueToStr())))
+                            {
+                                Data = Category[Iter2.ValueToStr()];
+                            }
+                            else if (Iter2.Text == "elemAttr")
+                            {
+                                Data = ElemName(Iter2.ValueToStr());
+                            }
+                            else if ((Iter2.Text == "boss") ||
+                                     (Iter2.Text == "firstAttack"))
+                            {
+                                Data = "";
+                            }
+                            else
+                            {
+                                Data = Iter2.ValueToStr();
+                            }
+
+                            if ((Iter2.Text == "PDRate") ||
+                                (Iter2.Text == "MDRate"))
+                                D = "%";
+                            else
+                                D = "";
+
+                            if (ToName.ContainsKey(Iter2.Text))
+                                ColList1.Add(
+                                    ToName[Iter2.Text] +
+                                    Data +
+                                    D +
+                                    ",  "
+                                );
+                        }
+                    }
+                }
+            }
+
+            // info/link 可能連到另一個 Mob 分割檔，
+            // 所以統一搜尋全部 Mob*.wz
             for (int i = 0; i < Links.Count; i++)
             {
-                if (WzArchive.GetNode(Links[i].Item1 + "/stand/0") != null)
-                    Child = WzArchive.GetNode(Links[i].Item1 + "/stand/0");
-                else if (WzArchive.GetNode(Links[i].Item1 + "/fly/0") != null)
-                    Child = WzArchive.GetNode(Links[i].Item1 + "/fly/0");
+                Wz_Node Child = Arc.GetMobNode(
+                    Links[i].Item1 + "/stand/0"
+                );
 
+                if (Child == null)
+                    Child = Arc.GetMobNode(
+                        Links[i].Item1 + "/fly/0"
+                    );
 
-                if (Arc.MobWz.GetNode(Links[i].Item1 + "/stand/0") != null)
-                    Child = Arc.MobWz.GetNode(Links[i].Item1 + "/stand/0");
-                else if (Arc.MobWz.GetNode(Links[i].Item1 + "/fly/0") != null)
-                    Child = Arc.MobWz.GetNode(Links[i].Item1 + "/fly/0");
-
-
-                Grid[1, Links[i].Item2].Value = Child.ExtractPng2();
+                if (Child != null)
+                    Grid[1, Links[i].Item2].Value =
+                        Child.ExtractPng2();
             }
+
             for (int i = 0; i < RowList.Count; i++)
             {
                 Grid[4, i].Value = RowList[i];
             }
+
             PutGridData1(3);
-            Grid.Sort(Grid.Columns[0], System.ComponentModel.ListSortDirection.Ascending);
+
+            Grid.Sort(
+                Grid.Columns[0],
+                System.ComponentModel.ListSortDirection.Ascending
+            );
         }
         [DllImport("Eval2.dll", EntryPoint = "Eval", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
         public static extern void Eval(string Formula, ref double Value, ref int ErrPos);
@@ -971,98 +1069,228 @@ foreach (var Iter in ItemImgNode.Nodes)
         }
         void LoadSkill(int Part)
         {
-            Wz_Structure WzArchive = null;
-            switch (Part)
+            var SkillArchives = new List<Wz_Structure>();
+
+            // 保留原本三個 Skill 頁籤：
+            //
+            // Part 1 = Skill.wz
+            // Part 2 = Skill001.wz
+            // Part 3 = Skill002.wz + Skill2.wz + Skill3.wz + ...
+            foreach (Wz_Structure wz in Arc.SkillWzList)
             {
-                case 1:
-                    WzArchive = Arc.SkillWz;
-                    break;
-                case 2:
-                    WzArchive = Arc.Skill001Wz;
-                    break;
-                case 3:
-                    WzArchive = Arc.Skill002Wz;
-                    break;
-            }
-            Bitmap Icon;
-            foreach (var img in WzArchive.Nodes())
-            {
-                if (Char.IsNumber(img.Text, 0))
+                if (wz == null)
+                    continue;
+
+                if (Part == 1)
                 {
-                    DumpData2(WzArchive.GetNode(img.Text + "/info"));
+                    if (wz == Arc.SkillWz)
+                        SkillArchives.Add(wz);
+                }
+                else if (Part == 2)
+                {
+                    if (Arc.Skill001Wz != null &&
+                        wz == Arc.Skill001Wz)
+                    {
+                        SkillArchives.Add(wz);
+                    }
+                }
+                else if (Part == 3)
+                {
+                    if (wz != Arc.SkillWz &&
+                        wz != Arc.Skill001Wz)
+                    {
+                        SkillArchives.Add(wz);
+                    }
+                }
+            }
+
+            if (SkillArchives.Count == 0)
+                return;
+
+            Bitmap Icon;
+
+            foreach (Wz_Structure WzArchive in SkillArchives)
+            {
+                foreach (var img in WzArchive.Nodes())
+                {
+                    if (!Char.IsNumber(img.Text, 0))
+                        continue;
+
+                    var InfoNode = WzArchive.GetNode(
+                        img.Text + "/info"
+                    );
+
+                    if (InfoNode != null)
+                        DumpData2(InfoNode);
 
                     var BookID = img.ImgID();
-                    string BookName = "";
-                    if (Arc.StringWz.GetNode("Skill.img/" + BookID) != null)
-                        BookName = Arc.StringWz.GetNode("Skill.img/" + BookID).GetValue2("bookName", "");
 
-                    if (WzArchive.GetNode(img.Text + "/info/icon") != null)
-                        Icon = WzArchive.GetNode(img.Text + "/info/icon").ExtractPng2();
+                    string BookName = "";
+
+                    var BookString = Arc.StringWz.GetNode(
+                        "Skill.img/" + BookID
+                    );
+
+                    if (BookString != null)
+                        BookName =
+                            BookString.GetValue2("bookName", "");
+
+                    var BookIcon = WzArchive.GetNode(
+                        img.Text + "/info/icon"
+                    );
+
+                    if (BookIcon != null)
+                        Icon = BookIcon.ExtractPng2();
                     else
                         Icon = null;
 
-                    Grid.Rows.Add(BookID, Icon, BookName, "", "");
+                    Grid.Rows.Add(
+                        BookID,
+                        Icon,
+                        BookName,
+                        "",
+                        ""
+                    );
 
-                    foreach (var Iter in WzArchive.GetNode(img.Text).Nodes)
+                    var SkillBookNode =
+                        WzArchive.GetNode(img.Text);
+
+                    if (SkillBookNode == null)
+                        continue;
+
+                    foreach (var Iter in SkillBookNode.Nodes)
                     {
                         foreach (var Iter2 in Iter.Nodes)
                         {
+                            if (Iter.Text != "skill")
+                                continue;
 
-                            if (Iter.Text == "skill")
+                            DumpData2(Iter2);
+
+                            var SkillID = Iter2.Text;
+
+                            if (Iter2.GetNode("icon") != null)
+                                Icon =
+                                    Iter2.GetNode("icon").ExtractPng2();
+                            else
+                                Icon = null;
+
+                            string SkillName = "";
+                            string Desc = "";
+
+                            var SkillString =
+                                Arc.StringWz.GetNode(
+                                    "Skill.img/" + SkillID
+                                );
+
+                            if (SkillString != null)
                             {
-                                DumpData2(Iter2);
-                                var SkillID = Iter2.Text;
-                                if (Iter2.GetNode("icon") != null)
-                                    Icon = Iter2.GetNode("icon").ExtractPng2();
-                                string SkillName = "", Desc = "";
-                                if (Arc.StringWz.GetNode("Skill.img/" + SkillID) != null)
-                                {
-                                    SkillName = Arc.StringWz.GetNode("Skill.img/" + SkillID).GetValue2("name", "");
-                                    Desc = Arc.StringWz.GetNode("Skill.img/" + SkillID).GetValue2("desc", "");
-                                }
-                                string hDesc = "";
-                                var Child = Arc.StringWz.GetNode("Skill.img/" + SkillID);
-                                if (Child != null)
-                                {
-                                    if (Child.GetNode("h") != null)
-                                    {
-                                        if (Child.GetNode("h").Value is string)
-                                        {
-                                            hDesc = Child.GetNode("h").Value.ToString();
-                                        }
-                                        hDesc = hDesc.Replace("mpConMP", "mpCon MP");
-                                        hDesc = hDesc.Replace(",", " ,");
-                                        Common = Iter2.GetNode("common");
-                                        if (Common != null)
-                                        {
-                                            MaxLev = Common.GetValue2("maxLevel", 1);
-                                            if (hDesc != "")
-                                            {
-                                                hDesc = "Lv." + MaxLev.ToString() + "= " + Regex.Replace(hDesc, "\\#[0-9,_,a-z,A-Z,\\.]+", CommonMatch);
-                                            }
-                                        }
-                                    }
-                                    else
-                                    {
-                                        for (int i = 1; i <= 30; i++)
-                                        {
-                                            if (Child.GetNode("h" + i.ToString()) != null)
-                                                hDesc = "Lv." + i.ToString() + "= " + Child.GetNode("h" + i.ToString()).Value.ToString();
-                                        }
-                                    }
-                                }
+                                SkillName =
+                                    SkillString.GetValue2(
+                                        "name",
+                                        ""
+                                    );
 
-                                Grid.Rows.Add(SkillID, Icon, SkillName, Desc, hDesc, "");
+                                Desc =
+                                    SkillString.GetValue2(
+                                        "desc",
+                                        ""
+                                    );
                             }
+
+                            string hDesc = "";
+                            var Child = SkillString;
+
+                            if (Child != null)
+                            {
+                                if (Child.GetNode("h") != null)
+                                {
+                                    if (Child.GetNode("h").Value is string)
+                                    {
+                                        hDesc =
+                                            Child.GetNode("h")
+                                                 .Value
+                                                 .ToString();
+                                    }
+
+                                    hDesc =
+                                        hDesc.Replace(
+                                            "mpConMP",
+                                            "mpCon MP"
+                                        );
+
+                                    hDesc =
+                                        hDesc.Replace(
+                                            ",",
+                                            " ,"
+                                        );
+
+                                    Common =
+                                        Iter2.GetNode("common");
+
+                                    if (Common != null)
+                                    {
+                                        MaxLev =
+                                            Common.GetValue2(
+                                                "maxLevel",
+                                                1
+                                            );
+
+                                        if (hDesc != "")
+                                        {
+                                            hDesc =
+                                                "Lv." +
+                                                MaxLev.ToString() +
+                                                "= " +
+                                                Regex.Replace(
+                                                    hDesc,
+                                                    "\\#[0-9,_,a-z,A-Z,\\.]+",
+                                                    CommonMatch
+                                                );
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    for (int i = 1; i <= 30; i++)
+                                    {
+                                        if (Child.GetNode(
+                                            "h" + i.ToString()
+                                        ) != null)
+                                        {
+                                            hDesc =
+                                                "Lv." +
+                                                i.ToString() +
+                                                "= " +
+                                                Child.GetNode(
+                                                    "h" +
+                                                    i.ToString()
+                                                ).Value.ToString();
+                                        }
+                                    }
+                                }
+                            }
+
+                            Grid.Rows.Add(
+                                SkillID,
+                                Icon,
+                                SkillName,
+                                Desc,
+                                hDesc,
+                                ""
+                            );
                         }
                     }
                 }
-
             }
+
             for (int i = 0; i < RowList.Count; i++)
                 Grid[5, i].Value = RowList[i];
 
-            Grid.Sort(Grid.Columns[0], System.ComponentModel.ListSortDirection.Ascending);
+            Grid.Sort(
+                Grid.Columns[0],
+                System.ComponentModel.ListSortDirection.Ascending
+            );
         }
         void LoadNpc()
         {
