@@ -438,7 +438,7 @@ namespace WinFormsApp1
             ToName.Add("mobdie", "獵殺特效");
             ToName.Add("statinc", "追加能力");
             var Dir = tabControl1.TabPages[tabIndex].Name;
-            if (Arc.CharacterWz.GetNode(Dir) == null)
+            if (Arc.GetCharacterNode(Dir) == null)
             {
                 MessageBox.Show(Dir + "  not found");
                 return;
@@ -1790,6 +1790,94 @@ namespace WinFormsApp1
                     Arc.SoundWz.Load(FolderPath + "\\Sound.wz");
                     Arc.EffectWz.Load(FolderPath + "\\Effect.wz");
                     Arc.BaseWz.Load(FolderPath + "\\Base.wz");
+                                        // =====================================================
+                    // Split WZ Support
+                    // 將主 WZ + 所有分割 WZ 放進同一個搜尋集合
+                    // =====================================================
+
+                    Arc.CharacterWzList.Clear();
+                    Arc.ItemWzList.Clear();
+                    Arc.MapWzList.Clear();
+                    Arc.MobWzList.Clear();
+                    Arc.SkillWzList.Clear();
+
+                    // ---------- Character ----------
+                    Arc.CharacterWzList.Add(Arc.CharacterWz);
+
+                    LoadExtraSplitWz(
+                        FolderPath,
+                        "Character",
+                        Arc.CharacterWzList,
+                        "Character.wz"
+                    );
+
+                    // ---------- Item ----------
+                    Arc.ItemWzList.Add(Arc.ItemWz);
+
+                    LoadExtraSplitWz(
+                        FolderPath,
+                        "Item",
+                        Arc.ItemWzList,
+                        "Item.wz"
+                    );
+
+                    // ---------- Map ----------
+                    Arc.MapWzList.Add(Arc.MapWz);
+
+                    if (Arc.Map001Wz != null)
+                        Arc.MapWzList.Add(Arc.Map001Wz);
+
+                    if (Arc.Map002Wz != null)
+                        Arc.MapWzList.Add(Arc.Map002Wz);
+
+                    if (Arc.Map2Wz != null)
+                        Arc.MapWzList.Add(Arc.Map2Wz);
+
+                    LoadExtraSplitWz(
+                        FolderPath,
+                        "Map",
+                        Arc.MapWzList,
+                        "Map.wz",
+                        "Map001.wz",
+                        "Map002.wz",
+                        "Map2.wz"
+                    );
+
+                    // ---------- Mob ----------
+                    Arc.MobWzList.Add(Arc.MobWz);
+
+                    if (Arc.Mob001Wz != null)
+                        Arc.MobWzList.Add(Arc.Mob001Wz);
+
+                    if (Arc.Mob2Wz != null)
+                        Arc.MobWzList.Add(Arc.Mob2Wz);
+
+                    LoadExtraSplitWz(
+                        FolderPath,
+                        "Mob",
+                        Arc.MobWzList,
+                        "Mob.wz",
+                        "Mob001.wz",
+                        "Mob2.wz"
+                    );
+
+                    // ---------- Skill ----------
+                    Arc.SkillWzList.Add(Arc.SkillWz);
+
+                    if (Arc.Skill001Wz != null)
+                        Arc.SkillWzList.Add(Arc.Skill001Wz);
+
+                    if (Arc.Skill002Wz != null)
+                        Arc.SkillWzList.Add(Arc.Skill002Wz);
+
+                    LoadExtraSplitWz(
+                        FolderPath,
+                        "Skill",
+                        Arc.SkillWzList,
+                        "Skill.wz",
+                        "Skill001.wz",
+                        "Skill002.wz"
+                    );
 
                     ToolTip2.openedWz.Add(Arc.CharacterWz);
                     ToolTip2.openedWz.Add(Arc.ItemWz);
