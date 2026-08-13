@@ -1977,53 +1977,58 @@ else
                 if (skip)
                     continue;
 
-Wz_Structure wz = new Wz_Structure();
+                Wz_Structure wz = new Wz_Structure();
 
-catch (Exception ex)
-{
-    string logPath = System.IO.Path.Combine(
-        folderPath,
-        "SplitWZ_Error.txt"
-    );
+                try
+                {
+                    wz.Load(file);
+                }
+                catch (Exception ex)
+                {
+                    string logPath = System.IO.Path.Combine(
+                        folderPath,
+                        "SplitWZ_Error.txt"
+                    );
 
-    string detail =
-        "==================================================" +
-        "\r\n時間: " +
-        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") +
-        "\r\n載入檔案: " + fileName +
-        "\r\n完整路徑: " + file +
-        "\r\n\r\n" +
-        ex.ToString() +
-        "\r\n\r\n";
+                    string detail =
+                        "==================================================" +
+                        "\r\n時間: " +
+                        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") +
+                        "\r\n載入檔案: " + fileName +
+                        "\r\n完整路徑: " + file +
+                        "\r\n\r\n" +
+                        ex.ToString() +
+                        "\r\n\r\n";
 
-    try
-    {
-        System.IO.File.AppendAllText(
-            logPath,
-            detail
-        );
-    }
-    catch
-    {
-        // 寫 log 失敗也不要蓋掉原本的 WZ 錯誤
-    }
+                    try
+                    {
+                        System.IO.File.AppendAllText(
+                            logPath,
+                            detail
+                        );
+                    }
+                    catch
+                    {
+                        // 寫入錯誤紀錄失敗時，不影響原本 WZ 錯誤
+                    }
 
-    MessageBox.Show(
-        "這顆 WZ 載入失敗：\r\n\r\n" +
-        fileName +
-        "\r\n\r\n" +
-        ex.Message +
-        "\r\n\r\n詳細紀錄：\r\n" +
-        logPath,
-        "Split WZ Diagnostic",
-        MessageBoxButtons.OK,
-        MessageBoxIcon.Error
-    );
+                    MessageBox.Show(
+                        "這顆 WZ 載入失敗：\r\n\r\n" +
+                        fileName +
+                        "\r\n\r\n" +
+                        ex.Message +
+                        "\r\n\r\n詳細紀錄：\r\n" +
+                        logPath,
+                        "Split WZ Diagnostic",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
 
-    return;
-}
+                    return;
+                }
 
-targetList.Add(wz);
+                targetList.Add(wz);
+                ToolTip2.openedWz.Add(wz);
             }
         }
         private void SelectFolderBox_Click(object sender, EventArgs e)
