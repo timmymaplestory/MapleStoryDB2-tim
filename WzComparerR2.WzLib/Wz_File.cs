@@ -272,25 +272,120 @@ namespace WzComparerR2.WzLib
 
             return offset;
         }
+        private InvalidDataException CreateDuplicateNodeException(
+    Wz_Node parent,
+    string duplicateName,
+    string incomingType,
+    int entryIndex,
+    int entryCount,
+    long filePosition)
+{
+    Wz_Node existingNode = null;
 
+    if (parent != null && duplicateName != null)
+        existingNode = parent.Nodes[duplicateName];
+
+    string existingType = "Unknown";
+
+    if (existingNode != null)
+    {
+        if (existingNode.Value is Wz_Image)
+        {
+            existingType = "Image";
+        }
+        else if (existingNode.Value is Wz_File)
+        {
+            existingType = "Wz_File";
+        }
+        else if (existingNode.Value == null)
+        {
+            existingType = "Directory / Empty Node";
+        }
+        else
+        {
+            existingType = existingNode.Value.GetType().FullName;
+        }
+    }
+
+    string fileName = "(unknown)";
+
+    if (this.Header != null &&
+        !string.IsNullOrEmpty(this.Header.FileName))
+    {
+        fileName = this.Header.FileName;
+    }
+    else if (this.FileStream != null)
+    {
+        fileName = this.FileStream.Name;
+    }
+
+    string parentPath =
+        parent != null
+        ? parent.FullPath
+        : "(null)";
+
+    string positionText =
+        filePosition >= 0
+        ? "0x" + filePosition.ToString("X") +
+          " (" + filePosition.ToString() + ")"
+        : "(unknown)";
+
+    string headerInfo = "";
+
+    if (this.Header != null)
+    {
+        headerInfo =
+            "\r\n\r\n===== WZ Header =====" +
+            "\r\nSignature: " + this.Header.Signature +
+            "\r\nHeader Size: " + this.Header.HeaderSize +
+            "\r\nData Size: " + this.Header.DataSize +
+            "\r\nFile Size: " + this.Header.FileSize +
+            "\r\nEncrypted Version: " +
+            this.Header.EncryptedVersion;
+    }
+
+    string message =
+        "WZ 解析發現重複節點。" +
+        "\r\n\r\n===== Duplicate Node =====" +
+        "\r\n檔案: " +
+        System.IO.Path.GetFileName(fileName) +
+        "\r\n完整檔案路徑: " + fileName +
+        "\r\n父節點: " + parentPath +
+        "\r\n重複名稱: " + duplicateName +
+        "\r\n準備加入類型: " + incomingType +
+        "\r\n已存在類型: " + existingType +
+        "\r\n解析項目: " +
+        (entryIndex + 1).ToString() +
+        " / " +
+        entryCount.ToString() +
+        "\r\n檔案位置: " + positionText +
+        headerInfo;
+
+    return new InvalidDataException(message);
+}
         public void GetDirTree(Wz_Node parent)
         {
             GetDirTree(parent, true);
         }
 
-        public void GetDirTree(Wz_Node parent, bool useBaseWz)
-        {
-            List<string> dirs = new List<string>();
-            string name = null;
+       public void GetDirTree(Wz_Node parent, bool useBaseWz)
+{
+    List<string> dirs = new List<string>();
+    List<long> dirPositions = new List<long>();
+
+    string name = null;
             int size = 0;
             int cs32 = 0;
             //int offs = 0;
 
             int count = ReadInt32();
 
-            for (int i = 0; i < count; i++)
-            {
-                switch ((int)this.BReader.ReadByte())
+           for (int i = 0; i < count; i++)
+{
+    long entryPosition = this.FileStream.Position;
+    int entryType = (int)this.BReader.ReadByte();
+
+    switch (entryType)
                 {
                     case 0x02:
                         name = this.ReadStringAt(this.Header.HeaderSize + 1 + this.BReader.ReadInt32());
@@ -305,21 +400,45 @@ namespace WzComparerR2.WzLib
                         uint pos = (uint)this.bReader.BaseStream.Position;
                         uint hashOffset = this.bReader.ReadUInt32();
 
-                        Wz_Image img = new Wz_Image(name, size, cs32, hashOffset, pos, this);
-                        Wz_Node childNode = parent.Nodes.Add(name);
-                        childNode.Value = img;
-                        img.OwnerNode = childNode;
+                       Wz_Image img = new Wz_Image(
+    name,
+    size,
+    cs32,
+    hashOffset,
+    pos,
+    this
+);
+
+// 診斷：同一個 parent 已經有同名節點
+if (parent.Nodes[name] != null)
+{
+    throw CreateDuplicateNodeException(
+        parent,
+        name,
+        "Image",
+        i,
+        count,
+        entryPosition
+    );
+}
+
+Wz_Node childNode = parent.Nodes.Add(name);
+childNode.Value = img;
+img.OwnerNode = childNode;
 
                         this.imageCount++;
                         break;
 
                     case 0x03:
-                        name = this.ReadString();
-                        size = this.ReadInt32();
-                        cs32 = this.ReadInt32();
-                        this.FileStream.Position += 4;
-                        dirs.Add(name);
-                        break;
+    name = this.ReadString();
+    size = this.ReadInt32();
+    cs32 = this.ReadInt32();
+    this.FileStream.Position += 4;
+
+    dirs.Add(name);
+    dirPositions.Add(entryPosition);
+
+    break;
                 }
             }
 
@@ -348,6 +467,7 @@ namespace WzComparerR2.WzLib
                                 if (!dirs.Take(dirCount).Any(dir => extDirName.Equals(dir, StringComparison.OrdinalIgnoreCase)))
                                 {
                                     dirs.Add(extDirName);
+dirPositions.Add(-1);
                                 }
                             }
                             else
@@ -365,6 +485,7 @@ namespace WzComparerR2.WzLib
                                 if (!dirs.Take(dirCount).Any(dir => extDirName.Equals(dir, StringComparison.OrdinalIgnoreCase)))
                                 {
                                     dirs.Add(extDirName);
+dirPositions.Add(-1);
                                 }
                             }
                             else
@@ -377,9 +498,28 @@ namespace WzComparerR2.WzLib
             }
 
             for (int i = 0; i < dirs.Count; i++)
-            {
-                string dir = dirs[i];
-                Wz_Node t = parent.Nodes.Add(dir);
+{
+    string dir = dirs[i];
+
+    long dirPosition =
+        i < dirPositions.Count
+        ? dirPositions[i]
+        : -1;
+
+    // 診斷：同一個 parent 已經有同名 Directory
+    if (parent.Nodes[dir] != null)
+    {
+        throw CreateDuplicateNodeException(
+            parent,
+            dir,
+            "Directory",
+            i,
+            dirs.Count,
+            dirPosition
+        );
+    }
+
+    Wz_Node t = parent.Nodes.Add(dir);
                 if (willLoadBaseWz)
                 {
                     this.WzStructure.has_basewz = true;
