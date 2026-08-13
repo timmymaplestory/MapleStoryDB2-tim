@@ -1085,7 +1085,12 @@ foreach (var Iter in ItemImgNode.Nodes)
             }
             Bitmap Icon = null;
             Bitmap MorphPic = null;
-            foreach (var Iter in Arc.ItemWz.GetNode("Consume/0221.img").Nodes)
+            var MorphConsumeNode = Arc.GetItemNode("Consume/0221.img");
+
+if (MorphConsumeNode == null)
+    return;
+
+foreach (var Iter in MorphConsumeNode.Nodes)
             {
                 DumpData2(Iter);
                 var ID = Iter.Text;
@@ -1186,20 +1191,27 @@ foreach (var Iter in ItemImgNode.Nodes)
                         CardID = "";
                 }
 
-                if (Arc.ItemWz.GetNode("Consume/0287.img/0" + CardID) != null)
-                {
-                    CardEntry = Arc.ItemWz.GetNode("Consume/0287.img/0" + CardID);
-                    if (CardEntry.GetNode("info/icon") != null)
-                        Icon = CardEntry.GetNode("info/icon").ExtractPng2();
-                }
-                else if (Arc.ItemWz.GetNode("Consume/0238.img/0" + CardID) != null)
-                {
-                    CardEntry = Arc.ItemWz.GetNode("Consume/0238.img/0" + CardID);
-                    if (CardEntry.GetNode("info/iconRaw") != null)
-                        Icon = CardEntry.GetNode("info/iconRaw").ExtractPng2();
-                }
-                else
-                    Icon = null;
+CardEntry = Arc.GetItemNode("Consume/0287.img/0" + CardID);
+
+if (CardEntry != null)
+{
+    if (CardEntry.GetNode("info/icon") != null)
+        Icon = CardEntry.GetNode("info/icon").ExtractPng2();
+}
+else
+{
+    CardEntry = Arc.GetItemNode("Consume/0238.img/0" + CardID);
+
+    if (CardEntry != null)
+    {
+        if (CardEntry.GetNode("info/iconRaw") != null)
+            Icon = CardEntry.GetNode("info/iconRaw").ExtractPng2();
+    }
+    else
+    {
+        Icon = null;
+    }
+}
 
                 var CardName = Arc.StringWz.GetNode("Consume.img/" + CardID).GetValue2("name", "");
                 Grid.Rows.Add(ID, MobPic, "", SkillName, SkillDesc, CardID, Icon, CardName);
@@ -1222,10 +1234,10 @@ foreach (var Iter in ItemImgNode.Nodes)
                     string[] imgs = new string[] { "0243.img", "0263.img" };
                     for (int i = 0; i <= 1; i++)
                     {
-                        var Entry = Arc.ItemWz.GetNode("Consume/" + imgs[i] + "/0" + Iter.Text + "/info/icon");
+                        var Entry = Arc.GetItemNode("Consume/" + imgs[i] + "/0" + Iter.Text + "/info/icon");
                         if (Entry != null)
                             Icon = Entry.ExtractPng2();
-                        Entry = Arc.ItemWz.GetNode("Consume/" + imgs[i] + "/0" + Iter.Text + "/info/sample");
+                        Entry = Arc.GetItemNode("Consume/" + imgs[i] + "/0" + Iter.Text + "/info/sample");
                         if (Entry != null)
                             Sample = Entry.ExtractPng2();
                     }
