@@ -10,10 +10,68 @@ using System.Text.RegularExpressions;
 namespace Wz.Utils
 {
     public class Arc
+{
+    // 保留原本的 WZ 變數，避免舊程式碼壞掉
+    public static Wz_Structure MobWz, Mob001Wz, Mob2Wz,
+        MapWz, Map2Wz, Map001Wz, Map002Wz,
+        SkillWz, Skill001Wz, Skill002Wz,
+        CharacterWz, ItemWz, NpcWz, MorphWz,
+        StringWz, EtcWz, ReactorWz, UIWz,
+        SoundWz, Sound001Wz, Sound2Wz,
+        EffectWz, BaseWz;
+
+    // 分割 WZ 集合
+    public static List<Wz_Structure> CharacterWzList = new List<Wz_Structure>();
+    public static List<Wz_Structure> ItemWzList = new List<Wz_Structure>();
+    public static List<Wz_Structure> MapWzList = new List<Wz_Structure>();
+    public static List<Wz_Structure> MobWzList = new List<Wz_Structure>();
+    public static List<Wz_Structure> SkillWzList = new List<Wz_Structure>();
+
+    // 從指定的分割 WZ 集合中尋找節點
+    public static Wz_Node GetNodeFromList(List<Wz_Structure> wzList, string path)
     {
-        public static Wz_Structure MobWz, Mob001Wz, Mob2Wz, MapWz, Map2Wz, Map001Wz, Map002Wz, SkillWz, Skill001Wz, Skill002Wz,
-         CharacterWz, ItemWz, NpcWz, MorphWz, StringWz, EtcWz, ReactorWz, UIWz, SoundWz, Sound001Wz, Sound2Wz, EffectWz, BaseWz;
+        if (wzList == null)
+            return null;
+
+        foreach (Wz_Structure wz in wzList)
+        {
+            if (wz == null)
+                continue;
+
+            Wz_Node node = wz.GetNode(path);
+
+            if (node != null)
+                return node;
+        }
+
+        return null;
     }
+
+    public static Wz_Node GetCharacterNode(string path)
+    {
+        return GetNodeFromList(CharacterWzList, path);
+    }
+
+    public static Wz_Node GetItemNode(string path)
+    {
+        return GetNodeFromList(ItemWzList, path);
+    }
+
+    public static Wz_Node GetMapNode(string path)
+    {
+        return GetNodeFromList(MapWzList, path);
+    }
+
+    public static Wz_Node GetMobNode(string path)
+    {
+        return GetNodeFromList(MobWzList, path);
+    }
+
+    public static Wz_Node GetSkillNode(string path)
+    {
+        return GetNodeFromList(SkillWzList, path);
+    }
+}
 
     public static class WzUtils
     {
