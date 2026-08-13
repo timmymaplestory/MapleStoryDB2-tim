@@ -1633,6 +1633,64 @@ namespace WinFormsApp1
         }
 
         BassSoundPlayer soundPlayer;
+                private void LoadExtraSplitWz(
+            string folderPath,
+            string prefix,
+            List<Wz_Structure> targetList,
+            params string[] skipFileNames)
+        {
+            string[] files = System.IO.Directory.GetFiles(
+                folderPath,
+                prefix + "*.wz"
+            );
+
+            Array.Sort(files, StringComparer.OrdinalIgnoreCase);
+
+            foreach (string file in files)
+            {
+                string fileName = System.IO.Path.GetFileName(file);
+
+                // 只接受：
+                // Character.wz
+                // Character2.wz
+                // Character3.wz
+                // Character001.wz
+                // Item2.wz
+                // Map2.wz
+                // Mob3.wz
+                // 這種「名稱 + 數字」格式
+                if (!Regex.IsMatch(
+                    fileName,
+                    "^" + Regex.Escape(prefix) + @"(\d+)?\.wz$",
+                    RegexOptions.IgnoreCase))
+                {
+                    continue;
+                }
+
+                bool skip = false;
+
+                foreach (string skipName in skipFileNames)
+                {
+                    if (string.Equals(
+                        fileName,
+                        skipName,
+                        StringComparison.OrdinalIgnoreCase))
+                    {
+                        skip = true;
+                        break;
+                    }
+                }
+
+                if (skip)
+                    continue;
+
+                Wz_Structure wz = new Wz_Structure();
+                wz.Load(file);
+
+                targetList.Add(wz);
+                ToolTip2.openedWz.Add(wz);
+            }
+        }
         private void SelectFolderBox_Click(object sender, EventArgs e)
         {
             if (folderBrowserDialog1.ShowDialog().ToString() == "OK")
