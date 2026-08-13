@@ -607,10 +607,10 @@ foreach (var Iter in ItemImgNode.Nodes)
 
         void LoadMap(int Part)
         {
-
             var Links = new List<(string, int)>();
             var MapNames = new Dictionary<string, (string, string)>();
             string StreetName, MapName;
+
             foreach (var Iter in Arc.StringWz.GetNode("Map.img").Nodes)
             {
                 foreach (var Iter2 in Iter.Nodes)
@@ -618,80 +618,125 @@ foreach (var Iter in ItemImgNode.Nodes)
                     string ID = Iter2.Text.PadLeft(9, '0');
                     StreetName = Iter2.GetValue2("streetName", "");
                     MapName = Iter2.GetValue2("mapName", "");
+
                     if (!MapNames.ContainsKey(ID))
                         MapNames.Add(ID, (StreetName, MapName));
                 }
             }
-            Wz_Node MapDir;
 
-            if (Arc.MapWz.GetNode("Map") != null)
-                MapDir = Arc.MapWz.GetNode("Map");
-            else
-                MapDir = Arc.Map002Wz.GetNode("Map");
-            Bitmap Icon; ;
+            Bitmap Icon;
             var Row = -1;
 
-            foreach (var Dir in MapDir.Nodes)
+            // 掃描所有 Map 分割 WZ
+            foreach (Wz_Structure MapArchive in Arc.MapWzList)
             {
-                if (LeftStr(Dir.Text, 3) != "Map")
+                if (MapArchive == null)
                     continue;
-                switch (Part)
+
+                Wz_Node MapDir = MapArchive.GetNode("Map");
+
+                if (MapDir == null)
+                    continue;
+
+                foreach (var Dir in MapDir.Nodes)
                 {
-                    case 1:
-                        if ((Dir.Text != "Map0") && (Dir.Text != "Map1") && (Dir.Text != "Map2") && (Dir.Text != "Map3"))
-                            continue;
-                        break;
-                    case 2:
-                        if ((Dir.Text != "Map4") && (Dir.Text != "Map5") && (Dir.Text != "Map6") && (Dir.Text != "Map7") && (Dir.Text != "Map8"))
-                            continue;
-                        break;
-                    case 3:
-                        if (Dir.Text != "Map9")
-                            continue;
-                        break;
-                }
+                    if (LeftStr(Dir.Text, 3) != "Map")
+                        continue;
 
-                foreach (var img in Dir.Nodes)
-                {
-                    Row += 1;
-                    DumpData2(img.GetNode("info"));
+                    switch (Part)
+                    {
+                        case 1:
+                            if ((Dir.Text != "Map0") &&
+                                (Dir.Text != "Map1") &&
+                                (Dir.Text != "Map2") &&
+                                (Dir.Text != "Map3"))
+                                continue;
+                            break;
 
-                    if (MapNames.ContainsKey(img.ImgID()))
-                    {
-                        StreetName = MapNames[img.ImgID()].Item1;
-                        MapName = MapNames[img.ImgID()].Item2;
-                    }
-                    else
-                    {
-                        StreetName = "";
-                        MapName = "";
+                        case 2:
+                            if ((Dir.Text != "Map4") &&
+                                (Dir.Text != "Map5") &&
+                                (Dir.Text != "Map6") &&
+                                (Dir.Text != "Map7") &&
+                                (Dir.Text != "Map8"))
+                                continue;
+                            break;
+
+                        case 3:
+                            if (Dir.Text != "Map9")
+                                continue;
+                            break;
                     }
 
-                    if (img.GetNode("miniMap/canvas") != null)
-                        Icon = img.GetNode("miniMap/canvas").ExtractPng2();
-                    else
-                        Icon = null;
+                    foreach (var img in Dir.Nodes)
+                    {
+                        Row += 1;
 
-                    Grid.Rows.Add(img.ImgID(), Icon, StreetName, MapName, "");
-                    var Link = img.GetNode("info/link");
-                    if (Link != null)
-                        Links.Add(("Map" + LeftStr(Link.Value.ToString(), 1) + "/" + Link.Value.ToString() + ".img", Row));
+                        DumpData2(img.GetNode("info"));
+
+                        if (MapNames.ContainsKey(img.ImgID()))
+                        {
+                            StreetName = MapNames[img.ImgID()].Item1;
+                            MapName = MapNames[img.ImgID()].Item2;
+                        }
+                        else
+                        {
+                            StreetName = "";
+                            MapName = "";
+                        }
+
+                        if (img.GetNode("miniMap/canvas") != null)
+                            Icon = img.GetNode("miniMap/canvas").ExtractPng2();
+                        else
+                            Icon = null;
+
+                        Grid.Rows.Add(
+                            img.ImgID(),
+                            Icon,
+                            StreetName,
+                            MapName,
+                            ""
+                        );
+
+                        var Link = img.GetNode("info/link");
+
+                        if (Link != null)
+                        {
+                            Links.Add((
+                                "Map" +
+                                LeftStr(Link.Value.ToString(), 1) +
+                                "/" +
+                                Link.Value.ToString() +
+                                ".img",
+                                Row
+                            ));
+                        }
+                    }
                 }
-
             }
 
+            // 地圖 link 也搜尋所有 Map 分割 WZ
             for (int i = 0; i < Links.Count; i++)
             {
-                var Child = MapDir.GetNode(Links[i].Item1 + "/miniMap/canvas");
+                var Child = Arc.GetMapNode(
+                    "Map/" +
+                    Links[i].Item1 +
+                    "/miniMap/canvas"
+                );
+
                 if (Child != null)
                     Grid[1, Links[i].Item2].Value = Child.ExtractPng2();
             }
+
             for (int i = 0; i < RowList.Count; i++)
             {
                 Grid[4, i].Value = RowList[i];
             }
-            Grid.Sort(Grid.Columns[0], System.ComponentModel.ListSortDirection.Ascending);
 
+            Grid.Sort(
+                Grid.Columns[0],
+                System.ComponentModel.ListSortDirection.Ascending
+            );
         }
 
         string s1(string S)
