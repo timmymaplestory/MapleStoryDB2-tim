@@ -1,0 +1,25 @@
+name: Build MapleStoryDB2 SplitWZ
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build Release x86
+        run: msbuild MapleStoryDB2.sln /m /p:Configuration=Release /p:Platform=x86
+
+      - name: Upload EXE and DLLs
+        uses: actions/upload-artifact@v4
+        with:
+          name: MapleStoryDB2-SplitWZ-x86
+          path: MapleStoryDB2/bin/x86/Release/
+          if-no-files-found: error
