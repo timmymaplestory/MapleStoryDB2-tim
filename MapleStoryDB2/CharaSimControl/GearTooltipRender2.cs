@@ -301,7 +301,7 @@ namespace WzComparerR2.CharaSimControl
                 }
                 else if (Gear.Props.TryGetValue(GearPropType.masterSpecial, out value) && value > 0)
                 {
-                    cashImg = Resource.CashItem_label_3;
+                    cashImg = Resource.ResourceManager.GetObject("CashShop_img_CashItem_label_3") as Bitmap;
                 }
                 if (cashImg == null) //default cashImg
                 {
