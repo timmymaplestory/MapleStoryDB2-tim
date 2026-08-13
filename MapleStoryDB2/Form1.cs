@@ -1977,11 +1977,28 @@ else
                 if (skip)
                     continue;
 
-                Wz_Structure wz = new Wz_Structure();
-                wz.Load(file);
+Wz_Structure wz = new Wz_Structure();
 
-                targetList.Add(wz);
-                ToolTip2.openedWz.Add(wz);
+try
+{
+    wz.Load(file);
+}
+catch (Exception ex)
+{
+    MessageBox.Show(
+        "這顆 WZ 載入失敗：\r\n\r\n" +
+        fileName +
+        "\r\n\r\n" +
+        ex.Message,
+        "Split WZ Test",
+        MessageBoxButtons.OK,
+        MessageBoxIcon.Error
+    );
+
+    return;
+}
+
+targetList.Add(wz);
             }
         }
         private void SelectFolderBox_Click(object sender, EventArgs e)
