@@ -106,7 +106,16 @@ namespace WinFormsApp1
         void LoadItem()
         {
             var ItemDir = tabControl1.TabPages[tabIndex].Name;
-            Wz_Node Child;
+
+var ItemDirNode = Arc.GetItemNode(ItemDir);
+
+if (ItemDirNode == null)
+{
+    MessageBox.Show(ItemDir + " not found");
+    return;
+}
+
+Wz_Node Child;
             switch (ItemDir)
             {
                 case "Etc":
@@ -122,21 +131,28 @@ namespace WinFormsApp1
             }
             string ID;
             Bitmap Icon = null;
-            foreach (var img in Arc.ItemWz.GetNode(ItemDir).Nodes)
+           foreach (var img in ItemDirNode.Nodes)
             {
                 if (ItemDir == "Pet")
                 {
                     ID = img.ImgID();
-                    if (Arc.ItemWz.GetNode("Pet/" + img.Text + "/info/iconD") != null)
-                        Icon = Arc.ItemWz.GetNode("Pet/" + img.Text + "/info/iconD").ExtractPng2();
+                    var PetIcon = Arc.GetItemNode("Pet/" + img.Text + "/info/iconD");
+
+if (PetIcon != null)
+    Icon = PetIcon.ExtractPng2();
                     var Name = Child.GetValue2(ID + "/name", "  ");
                     var Desc = Child.GetValue2(ID + "/desc", "  ");
-                    DumpData2(Arc.ItemWz.GetNode("Pet/" + img.Text + "/info"));
+                    DumpData2(Arc.GetItemNode("Pet/" + img.Text + "/info"));
                     Grid.Rows.Add(ID, Icon, Name, Desc, "");
                 }
                 else
                 {
-                    foreach (var Iter in Arc.ItemWz.GetNode(ItemDir + "/" + img.Text).Nodes)
+                   var ItemImgNode = Arc.GetItemNode(ItemDir + "/" + img.Text);
+
+if (ItemImgNode == null)
+    continue;
+
+foreach (var Iter in ItemImgNode.Nodes)
                     {
                         DumpData2(Iter);
                         ID = Iter.Text.IDString();
