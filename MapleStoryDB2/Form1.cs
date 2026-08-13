@@ -438,11 +438,13 @@ namespace WinFormsApp1
             ToName.Add("mobdie", "獵殺特效");
             ToName.Add("statinc", "追加能力");
             var Dir = tabControl1.TabPages[tabIndex].Name;
-            if (Arc.GetCharacterNode(Dir) == null)
-            {
-                MessageBox.Show(Dir + "  not found");
-                return;
-            }
+            var CharacterDir = Arc.GetCharacterNode(Dir);
+
+            if (CharacterDir == null)
+               {
+              MessageBox.Show(Dir + "  not found");
+               return;
+               }
 
             Wz_Node Child = null;
             switch (Dir)
@@ -455,7 +457,7 @@ namespace WinFormsApp1
             string ID, Desc, h1;
             Bitmap Icon = null;
             string IName, Data = "", D;
-            foreach (var img in Arc.CharacterWz.GetNode(Dir).Nodes)
+            foreach (var img in CharacterDir.Nodes)
             {
                 if (LeftStr(img.Text, 1) != "0")
                     continue;
@@ -484,7 +486,7 @@ namespace WinFormsApp1
                 RowList[Row] += ", " + Desc + h1;
 
                 Grid.Rows.Add(img.ImgID(), Icon, Child.GetValue2(ID + "/name", ""), "", RowList[Row]);
-                foreach (var Iter in Arc.CharacterWz.GetNode(Dir + '/' + img.Text).Nodes)
+                foreach (var Iter in Arc.GetCharacterNode(Dir + "/" + img.Text).Nodes)
                 {
                     foreach (var Iter2 in Iter.Nodes)
                     {
