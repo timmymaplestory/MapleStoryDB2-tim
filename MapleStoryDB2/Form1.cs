@@ -1979,18 +1979,43 @@ else
 
 Wz_Structure wz = new Wz_Structure();
 
-try
-{
-    wz.Load(file);
-}
 catch (Exception ex)
 {
+    string logPath = System.IO.Path.Combine(
+        folderPath,
+        "SplitWZ_Error.txt"
+    );
+
+    string detail =
+        "==================================================" +
+        "\r\n時間: " +
+        DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") +
+        "\r\n載入檔案: " + fileName +
+        "\r\n完整路徑: " + file +
+        "\r\n\r\n" +
+        ex.ToString() +
+        "\r\n\r\n";
+
+    try
+    {
+        System.IO.File.AppendAllText(
+            logPath,
+            detail
+        );
+    }
+    catch
+    {
+        // 寫 log 失敗也不要蓋掉原本的 WZ 錯誤
+    }
+
     MessageBox.Show(
         "這顆 WZ 載入失敗：\r\n\r\n" +
         fileName +
         "\r\n\r\n" +
-        ex.Message,
-        "Split WZ Test",
+        ex.Message +
+        "\r\n\r\n詳細紀錄：\r\n" +
+        logPath,
+        "Split WZ Diagnostic",
         MessageBoxButtons.OK,
         MessageBoxIcon.Error
     );
