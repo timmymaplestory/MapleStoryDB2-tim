@@ -36,15 +36,17 @@ namespace WzComparerR2.CharaSimControl
         }
 
         public static readonly Dictionary<string, TextureBrush> TBrushes;
-        public static readonly Font ItemNameFont = new Font("宋体", 14f, FontStyle.Bold, GraphicsUnit.Pixel);
-        public static readonly Font ItemDetailFont = new Font("宋体", 12f, GraphicsUnit.Pixel);
-        public static readonly Font EpicGearDetailFont = new Font("宋体", 12f, FontStyle.Bold, GraphicsUnit.Pixel);
-        public static readonly Font TahomaFont = new Font("Tahoma", 12f, GraphicsUnit.Pixel);
-        public static readonly Font SetItemPropFont = new Font("宋体", 12f, GraphicsUnit.Pixel);
-        public static readonly Font ItemReqLevelFont = new Font("宋体", 11f, GraphicsUnit.Pixel);
+public static readonly Font ItemNameFont = new Font("宋体", 14f, FontStyle.Bold, GraphicsUnit.Pixel);
+public static readonly Font ItemDetailFont = new Font("宋体", 12f, GraphicsUnit.Pixel);
+public static readonly Font EquipDetailFont = new Font("宋体", 12f, GraphicsUnit.Pixel);
+public static readonly Font EpicGearDetailFont = new Font("宋体", 12f, FontStyle.Bold, GraphicsUnit.Pixel);
+public static readonly Font TahomaFont = new Font("Tahoma", 12f, GraphicsUnit.Pixel);
+public static readonly Font SetItemPropFont = new Font("宋体", 12f, GraphicsUnit.Pixel);
+public static readonly Font ItemReqLevelFont = new Font("宋体", 11f, GraphicsUnit.Pixel);
 
-        public static Font ItemNameFont2 { get; private set; }
-        public static Font ItemDetailFont2 { get; private set; }
+public static Font ItemNameFont2 { get; private set; }
+public static Font ItemDetailFont2 { get; private set; }
+public static Font EquipDetailFont2 { get; private set; }
 
         public static void SetFontFamily(string fontName)
         {
@@ -53,7 +55,7 @@ namespace WzComparerR2.CharaSimControl
                 ItemNameFont2.Dispose();
                 ItemNameFont2 = null;
             }
-            ItemNameFont2 = new Font(fontName, 14f, FontStyle.Bold, GraphicsUnit.Pixel);
+            ItemNameFont2 = new Font(fontName, 15f, FontStyle.Bold, GraphicsUnit.Pixel);
 
             if (ItemDetailFont2 != null)
             {
@@ -61,6 +63,17 @@ namespace WzComparerR2.CharaSimControl
                 ItemDetailFont2 = null;
             }
             ItemDetailFont2 = new Font(fontName, 12f, GraphicsUnit.Pixel);
+            if (EquipDetailFont2 != null)
+{
+    EquipDetailFont2.Dispose();
+    EquipDetailFont2 = null;
+}
+
+EquipDetailFont2 = new Font(
+    fontName,
+    12f,
+    GraphicsUnit.Pixel
+);
         }
 
         public static readonly Color GearBackColor = Color.FromArgb(204, 0, 51, 85);
@@ -154,27 +167,40 @@ namespace WzComparerR2.CharaSimControl
         /// </summary>
         public static readonly Brush GearPropChangeBrush = new SolidBrush(gearCyanColor);
 
-        public static Brush GetGearNameBrush(int diff, bool up)
-        {
-            if (diff < 0)
-                return GearNameBrushA;
-            if (diff < 6)
-            {
-                if (!up)
-                    return GearNameBrushB;
-                else
-                    return GearNameBrushC;
-            }
-            if (diff < 23)
-                return GearNameBrushD;
-            if (diff < 40)
-                return GearNameBrushE;
-            if (diff < 55)
-                return GearNameBrushF;
-            if (diff < 70)
-                return GearNameBrushG;
-            return GearNameBrushH;
-        }
+public static Brush GetGearNameBrush(
+    int diff,
+    bool up,
+    bool cash = false,
+    bool petEquip = false)
+{
+    if (cash && !petEquip)
+        return GearNameBrushB;
+
+    if (diff < 0)
+        return GearNameBrushA;
+
+    if (diff < 6 || petEquip)
+    {
+        if (!up)
+            return GearNameBrushB;
+        else
+            return GearNameBrushC;
+    }
+
+    if (diff < 23)
+        return GearNameBrushD;
+
+    if (diff < 40)
+        return GearNameBrushE;
+
+    if (diff < 55)
+        return GearNameBrushF;
+
+    if (diff < 70)
+        return GearNameBrushG;
+
+    return GearNameBrushH;
+}
 
         public static readonly Pen GearItemBorderPenC = new Pen(Color.FromArgb(255, 0, 102));
         public static readonly Pen GearItemBorderPenB = new Pen(gearBlueColor);
@@ -227,7 +253,7 @@ namespace WzComparerR2.CharaSimControl
             using (var r = new FormattedTextRenderer())
             {
                 r.WordWrapEnabled = false;
-                r.UseGDIRenderer = false;
+                r.UseGDIRenderer = true;
                 r.DrawString(g, s, font, x, x1, ref y, height);
             }
         }
@@ -240,7 +266,7 @@ namespace WzComparerR2.CharaSimControl
             using (var r = new FormattedTextRenderer())
             {
                 r.WordWrapEnabled = false;
-                r.UseGDIRenderer = false;
+                r.UseGDIRenderer = true;
                 r.DrawPlainText(g, s, font, color, x, x1, ref y, height);
             }
         }
