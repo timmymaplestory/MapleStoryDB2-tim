@@ -266,7 +266,7 @@ public static Brush GetGearNameBrush(
             using (var r = new FormattedTextRenderer())
             {
                 r.WordWrapEnabled = false;
-                r.UseGDIRenderer = true;
+                r.UseGDIRenderer = false;
                 r.DrawPlainText(g, s, font, color, x, x1, ref y, height);
             }
         }
