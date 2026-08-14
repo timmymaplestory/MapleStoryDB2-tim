@@ -482,20 +482,35 @@ namespace WzComparerR2.CharaSim
                     switch (subNode.Text)
                     {
                         case "icon":
-                            if (subNode.Value is Wz_Png)
-                            {
-                                gear.Icon = BitmapOrigin.CreateFromNode(subNode, findNode);
-                            }
-                            break;
+    if (subNode.Value is Wz_Png || subNode.Value is Wz_Uol)
+    {
+        gear.Icon = BitmapOrigin.CreateFromNode(subNode, findNode);
+    }
+    break;
 
-                        case "iconRaw":
-                            if (subNode.Value is Wz_Png)
-                            {
-                                gear.IconRaw = BitmapOrigin.CreateFromNode(subNode, findNode);
-                            }
-                            break;
+case "iconRaw":
+    if (subNode.Value is Wz_Png)
+    {
+        // iconRaw 本身就是圖片，正常使用 iconRaw
+        gear.IconRaw = BitmapOrigin.CreateFromNode(subNode, findNode);
+    }
+    else if (subNode.Value is Wz_Uol)
+    {
+        // iconRaw 是 WzUolProperty 時，不追 iconRaw
+        // 直接改用同一件裝備的 info/icon
+        Wz_Node iconNode = infoNode.Nodes["icon"];
 
-                        case "sample":
+        if (iconNode != null)
+        {
+            gear.IconRaw = BitmapOrigin.CreateFromNode(
+                iconNode,
+                findNode
+            );
+        }
+    }
+    break;
+
+case "sample":
                             if (subNode.Value is Wz_Png)
                             {
                                 gear.Sample = BitmapOrigin.CreateFromNode(subNode, findNode);
