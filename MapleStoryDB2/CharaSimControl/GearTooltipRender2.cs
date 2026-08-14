@@ -183,10 +183,38 @@ namespace WzComparerR2.CharaSimControl
                 gearName += " (" + nameAdd + ")";
             }
 
-            format.Alignment = StringAlignment.Center;
-            g.DrawString(gearName, GearGraphics.ItemNameFont2,
-                GearGraphics.GetGearNameBrush(Gear.diff, Gear.ScrollUp > 0), 130, picH, format);
-            picH += 23;
+           format.Alignment = StringAlignment.Center;
+
+SolidBrush gearNameBrush =
+    GearGraphics.GetGearNameBrush(
+        Gear.diff,
+        Gear.ScrollUp > 0,
+        Gear.Cash,
+        Gear.ItemID / 10000 == 180
+    ) as SolidBrush;
+
+Color gearNameColor =
+    gearNameBrush != null
+    ? gearNameBrush.Color
+    : Color.White;
+
+System.Windows.Forms.TextRenderer.DrawText(
+    g,
+    gearName,
+    GearGraphics.ItemNameFont2,
+    new Rectangle(
+        0,
+        picH,
+        261,
+        23
+    ),
+    gearNameColor,
+    System.Windows.Forms.TextFormatFlags.HorizontalCenter |
+    System.Windows.Forms.TextFormatFlags.NoPrefix |
+    System.Windows.Forms.TextFormatFlags.NoPadding
+);
+
+picH += 23;
 
             //装备rank
             string rankStr = null;
@@ -198,11 +226,26 @@ namespace WzComparerR2.CharaSimControl
             {
                 rankStr = ItemStringHelper.GetGearGradeString(Gear.Grade);
             }
-            if (rankStr != null)
-            {
-                g.DrawString(rankStr, GearGraphics.ItemDetailFont, Brushes.White, 130, picH, format);
-                picH += 15;
-            }
+           if (rankStr != null)
+{
+    System.Windows.Forms.TextRenderer.DrawText(
+        g,
+        rankStr,
+        GearGraphics.EquipDetailFont,
+        new Rectangle(
+            0,
+            picH,
+            261,
+            15
+        ),
+        Color.White,
+        System.Windows.Forms.TextFormatFlags.HorizontalCenter |
+        System.Windows.Forms.TextFormatFlags.NoPrefix |
+        System.Windows.Forms.TextFormatFlags.NoPadding
+    );
+
+    picH += 15;
+}
 
            
 
@@ -324,7 +367,19 @@ namespace WzComparerR2.CharaSimControl
                         picH + 15 + 3);
                 }
             }
+            Bitmap oldIconFrame =
+    Resource.ResourceManager.GetObject(
+        "UIToolTip_img_Item_ItemIcon_old"
+    ) as Bitmap;
 
+if (oldIconFrame != null)
+{
+    g.DrawImage(
+        oldIconFrame,
+        17,
+        picH + 14
+    );
+}
             g.DrawImage(Resource.UIToolTip_img_Item_ItemIcon_cover, 16, picH + 14); //绘制左上角cover
 
             //绘制攻击力变化
