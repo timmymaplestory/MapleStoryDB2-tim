@@ -486,7 +486,7 @@ if (oldIconFrame != null)
             //机器人等级
             if (Gear.Props.TryGetValue(GearPropType.grade, out value) && value > 0)
             {
-                g.DrawString("等级 : " + value, GearGraphics.ItemDetailFont, Brushes.White, 11, picH);
+                g.DrawString("等級 : " + value, GearGraphics.ItemDetailFont, Brushes.White, 11, picH);
                 picH += 16;
                 hasPart2 = true;
             }
@@ -539,7 +539,7 @@ if (oldIconFrame != null)
             bool hasTuc = Gear.HasTuc && Gear.Props.TryGetValue(GearPropType.tuc, out value);
             if (Gear.GetBooleanValue(GearPropType.exceptUpgrade))
             {
-                g.DrawString("無法强化", GearGraphics.ItemDetailFont, Brushes.White, 11, picH);
+                g.DrawString("無法強化", GearGraphics.ItemDetailFont, Brushes.White, 11, picH);
                 picH += 16;
             }
             else if (hasTuc)
@@ -598,7 +598,7 @@ if (oldIconFrame != null)
                 {
                     int reqLvl;
                     Gear.Props.TryGetValue(GearPropType.reqLevel, out reqLvl);
-                    g.DrawString("增加各角色等級能力值(" + reqLvl + "Lv为止)", GearGraphics.ItemDetailFont, GearGraphics.OrangeBrush3, 130, picH, format);
+                    g.DrawString("增加各角色等級能力值(" + reqLvl + "Lv為止)", GearGraphics.ItemDetailFont, GearGraphics.OrangeBrush3, 130, picH, format);
                     picH += 20;
 
                     int reduceLvl;
@@ -996,7 +996,7 @@ if (oldIconFrame != null)
                     g = Graphics.FromImage(levelOrSealed);
                 }
                 picHeight += 13;
-                g.DrawString("封印解除属性", GearGraphics.ItemDetailFont, GearGraphics.GreenBrush2, 130, picHeight, format);
+                g.DrawString("封印解除屬性", GearGraphics.ItemDetailFont, GearGraphics.GreenBrush2, 130, picHeight, format);
                 picHeight += 16;
                 for (int i = 0; i < Gear.Seals.Count; i++)
                 {
@@ -1225,54 +1225,140 @@ if (oldIconFrame != null)
             DrawReqNum(g, numValue, NumberType.LookAhead, x - 5 - 1, y + 6, StringAlignment.Far);
         }
 
-        private void DrawJobReq(Graphics g, ref int picH)
+                private void DrawJobReq(Graphics g, ref int picH)
         {
             int value;
-            string extraReq = ItemStringHelper.GetExtraJobReqString(Gear.type) ??
-                (Gear.Props.TryGetValue(GearPropType.reqSpecJob, out value) ? ItemStringHelper.GetExtraJobReqString(value) : null);
-            Image jobImage = extraReq == null ? Resource.UIToolTip_img_Item_Equip_Job_normal : Resource.UIToolTip_img_Item_Equip_Job_expand;
-            g.DrawImage(jobImage, 12, picH);
+
+            string extraReq =
+                ItemStringHelper.GetExtraJobReqString(Gear.type) ??
+                (Gear.Props.TryGetValue(
+                    GearPropType.reqSpecJob,
+                    out value)
+                    ? ItemStringHelper.GetExtraJobReqString(value)
+                    : null);
+
+            // -----------------------------------------------------
+            // 不再使用 CharaSimResource 裡的簡體 Job 文字圖片。
+            // 直接由程式畫出台版職業名稱。
+            // -----------------------------------------------------
 
             int reqJob;
-            Gear.Props.TryGetValue(GearPropType.reqJob, out reqJob);
-            int[] origin = new int[] { 9, 4, 42+11, 4, 78+11, 5, 124, 4, 165+5, 5, 200+5, 5 };
-            int[] origin2 = new int[] { 10, 6, 44, 6, 79, 6, 126, 6, 166, 6, 201, 6 };
+            Gear.Props.TryGetValue(
+                GearPropType.reqJob,
+                out reqJob
+            );
+
+            int jobMask = reqJob;
+
+            // 原本 DB2 的判斷邏輯保留
+            bool beginnerAllowed = jobMask <= 0;
+
+            if (jobMask == 0)
+                jobMask = 0x1f;
+
+            if (jobMask == -1)
+                jobMask = 0;
+
+            string[] jobNames =
+            {
+                "初心者",
+                "劍士",
+                "法師",
+                "弓箭手",
+                "盜賊",
+                "海盜"
+            };
+
+            // 每個職業自己的固定區域
+            // 不再依賴舊版 PNG 的 origin 座標
+            Rectangle[] jobRects =
+            {
+                new Rectangle(12,  picH + 3, 42, 18),
+                new Rectangle(52,  picH + 3, 38, 18),
+                new Rectangle(88,  picH + 3, 38, 18),
+                new Rectangle(124, picH + 3, 45, 18),
+                new Rectangle(169, picH + 3, 38, 18),
+                new Rectangle(207, picH + 3, 42, 18)
+            };
+
             for (int i = 0; i <= 5; i++)
             {
-                bool enable;
+                bool allowedByItem;
+
                 if (i == 0)
                 {
-                    enable = reqJob <= 0;
-                    if (reqJob == 0) reqJob = 0x1f;//0001 1111
-                    if (reqJob == -1) reqJob = 0; //0000 0000
+                    allowedByItem = beginnerAllowed;
                 }
                 else
                 {
-                    enable = (reqJob & (1 << (i - 1))) != 0;
+                    allowedByItem =
+                        (jobMask & (1 << (i - 1))) != 0;
                 }
-                if (enable)
+
+                bool enabled = allowedByItem;
+
+                // 有角色資料時，再檢查目前角色職業
+                if (enabled && this.charStat != null)
                 {
-                    enable = this.charStat == null || Character.CheckJobReq(this.charStat.Job, i);
-                    Image jobImage2 = Resource.ResourceManager.GetObject("UIToolTip_img_Item_Equip_Job_" + (enable ? "enable" : "disable") + "_" + i.ToString()) as Image;
-                    if (jobImage != null)
-                    {
-                        if (enable)
-                            g.DrawImage(jobImage2, 12 + origin[i * 2], picH + origin[i * 2 + 1]);
-                        else
-                            g.DrawImage(jobImage2, 12 + origin2[i * 2], picH + origin2[i * 2 + 1]);
-                    }
+                    enabled =
+                        Character.CheckJobReq(
+                            this.charStat.Job,
+                            i
+                        );
                 }
+
+                Color textColor =
+                    enabled
+                    ? Color.White
+                    : GearGraphics.GrayColor2;
+
+                System.Windows.Forms.TextRenderer.DrawText(
+                    g,
+                    jobNames[i],
+                    GearGraphics.EquipDetailFont,
+                    jobRects[i],
+                    textColor,
+                    System.Windows.Forms.TextFormatFlags.HorizontalCenter |
+                    System.Windows.Forms.TextFormatFlags.VerticalCenter |
+                    System.Windows.Forms.TextFormatFlags.NoPrefix |
+                    System.Windows.Forms.TextFormatFlags.NoPadding
+                );
             }
+
+            // -----------------------------------------------------
+            // 特殊職業需求
+            // -----------------------------------------------------
             if (extraReq != null)
             {
-                StringFormat format = new StringFormat();
-                format.Alignment = StringAlignment.Center;
-                g.DrawString(extraReq, GearGraphics.ItemDetailFont, GearGraphics.OrangeBrush3, 130, picH + 24, format);
-                format.Dispose();
-            }
-            picH += jobImage.Height + 9;
-        }
+                SolidBrush extraBrush =
+                    GearGraphics.OrangeBrush3 as SolidBrush;
 
+                Color extraColor =
+                    extraBrush != null
+                    ? extraBrush.Color
+                    : Color.Orange;
+
+                System.Windows.Forms.TextRenderer.DrawText(
+                    g,
+                    extraReq,
+                    GearGraphics.EquipDetailFont,
+                    new Rectangle(
+                        8,
+                        picH + 24,
+                        245,
+                        16
+                    ),
+                    extraColor,
+                    System.Windows.Forms.TextFormatFlags.HorizontalCenter |
+                    System.Windows.Forms.TextFormatFlags.NoPrefix |
+                    System.Windows.Forms.TextFormatFlags.NoPadding
+                );
+
+                picH += 16;
+            }
+
+            picH += 31;
+        }
         private Image FindReqImage(NumberType type, string req, out Size size)
         {
             Image image = Resource.ResourceManager.GetObject("UIToolTip_img_Item_Equip_" + type.ToString() + "_" + req) as Image;
