@@ -162,7 +162,7 @@ namespace WzComparerR2.CharaSimControl
             int value;
 
             picH = 13;
-            DrawStar2(g, ref picH); //绘制星星
+            
 
             //绘制装备名称
             StringResult sr;
@@ -297,15 +297,34 @@ picH += 23;
             g.DrawImage(res["dotline"].Image, 0, picH);
 
             //绘制装备图标
-            if (Gear.Grade > 0 && (int)Gear.Grade <= 4) //绘制外框
-            {
-                Image border = Resource.ResourceManager.GetObject("UIToolTip_img_Item_ItemIcon_" + (int)Gear.Grade) as Image;
-                if (border != null)
-                {
-                    g.DrawImage(border, 13, picH + 11);
-                }
-            }
-            g.DrawImage(Resource.UIToolTip_img_Item_ItemIcon_base, 12, picH + 10); //绘制背景
+            // 裝備圖示整體置中
+int iconBaseX =
+    (261 - Resource.UIToolTip_img_Item_ItemIcon_base.Width) / 2;
+
+// 繪製裝備品級外框
+if (Gear.Grade > 0 && (int)Gear.Grade <= 4)
+{
+    Image border =
+        Resource.ResourceManager.GetObject(
+            "UIToolTip_img_Item_ItemIcon_" +
+            (int)Gear.Grade
+        ) as Image;
+
+    if (border != null)
+    {
+        g.DrawImage(
+            border,
+            iconBaseX + 1,
+            picH + 11
+        );
+    }
+}
+
+g.DrawImage(
+    Resource.UIToolTip_img_Item_ItemIcon_base,
+    iconBaseX,
+    picH + 10
+);
             if (Gear.IconRaw.Bitmap != null) //绘制icon
             {
                 var attr = new System.Drawing.Imaging.ImageAttributes();
@@ -322,14 +341,21 @@ picH += 23;
                 //绘制阴影
                 var shade = Resource.UIToolTip_img_Item_ItemIcon_shade;
                 g.DrawImage(shade,
-                    new Rectangle(18 + 9, picH + 15 + 54, shade.Width, shade.Height),
+                   new Rectangle(
+    iconBaseX + 15,
+    picH + 15 + 54,
+    shade.Width,
+    shade.Height
+),
                     0, 0, shade.Width, shade.Height,
                     GraphicsUnit.Pixel,
                     attr);
                 //绘制图标
-                g.DrawImage(GearGraphics.EnlargeBitmap(Gear.IconRaw.Bitmap),
-                    18 + (1 - Gear.IconRaw.Origin.X) * 2,
-                    picH + 15 + (33 - Gear.IconRaw.Origin.Y) * 2);
+g.DrawImage(
+    GearGraphics.EnlargeBitmap(Gear.IconRaw.Bitmap),
+    iconBaseX + 6 + (1 - Gear.IconRaw.Origin.X) * 2,
+    picH + 15 + (33 - Gear.IconRaw.Origin.Y) * 2
+);
 
                 attr.Dispose();
             }
@@ -351,10 +377,12 @@ picH += 23;
                     cashImg = Resource.CashItem_0;
                 }
 
-                g.DrawImage(GearGraphics.EnlargeBitmap(cashImg),
-                    18 + 68 - 26,
-                    picH + 15 + 68 - 26);
-            }
+               g.DrawImage(
+    GearGraphics.EnlargeBitmap(cashImg),
+    iconBaseX + 48,
+    picH + 15 + 42
+    );
+}
             //检查星岩
             bool hasSocket = Gear.GetBooleanValue(GearPropType.nActivatedSocket);
             if (hasSocket)
@@ -363,7 +391,7 @@ picH += 23;
                 if (socketBmp != null)
                 {
                     g.DrawImage(GearGraphics.EnlargeBitmap(socketBmp),
-                        18 + 2,
+                        iconBaseX + 8,
                         picH + 15 + 3);
                 }
             }
@@ -376,27 +404,26 @@ if (oldIconFrame != null)
 {
     g.DrawImage(
         oldIconFrame,
-        17,
+        iconBaseX + 5,
         picH + 14
     );
 }
-            g.DrawImage(Resource.UIToolTip_img_Item_ItemIcon_cover, 16, picH + 14); //绘制左上角cover
+           g.DrawImage(
+    Resource.UIToolTip_img_Item_ItemIcon_cover,
+    iconBaseX + 4,
+    picH + 14
+);
 
             //绘制攻击力变化
-            format.Alignment = StringAlignment.Far;
-            g.DrawString("攻擊力增加量", GearGraphics.ItemDetailFont, GearGraphics.GrayBrush2, 251, picH + 10, format);
-            g.DrawImage(Resource.UIToolTip_img_Item_Equip_Summary_incline_0, 249 - 19, picH + 27); //暂时画个0
+// 裝備圖片下方留白
+picH += 92;
 
-            //绘制属性需求
-            DrawGearReq(g, 97, picH + 58);
-            picH += 93;
+// 五項需求垂直排列
+DrawGearReq(g, 70, picH);
+picH += 125;
 
-            //绘制属性变化
-            DrawPropDiffEx(g, 12, picH);
-            picH += 20;
-
-            //绘制职业需求
-            DrawJobReq(g, ref picH);
+// 職業需求
+DrawJobReq(g, ref picH);
 
             //分割线2号
             g.DrawImage(res["dotline"].Image, 0, picH);
@@ -1131,69 +1158,129 @@ if (oldIconFrame != null)
             }
         }
 
-        private void DrawGearReq(Graphics g, int x, int y)
+private void DrawGearReq(Graphics g, int x, int y)
+{
+    int reqLevel = 0;
+    int reqSTR = 0;
+    int reqDEX = 0;
+    int reqINT = 0;
+    int reqLUK = 0;
+    int reqPOP = 0;
+
+    Gear.Props.TryGetValue(GearPropType.reqLevel, out reqLevel);
+    Gear.Props.TryGetValue(GearPropType.reqSTR, out reqSTR);
+    Gear.Props.TryGetValue(GearPropType.reqDEX, out reqDEX);
+    Gear.Props.TryGetValue(GearPropType.reqINT, out reqINT);
+    Gear.Props.TryGetValue(GearPropType.reqLUK, out reqLUK);
+    Gear.Props.TryGetValue(GearPropType.reqPOP, out reqPOP);
+
+    // 套用裝備需求等級降低
+    int reduceReq;
+
+    if (Gear.Props.TryGetValue(
+        GearPropType.reduceReq,
+        out reduceReq))
+    {
+        reqLevel = Math.Max(
+            0,
+            reqLevel - reduceReq
+        );
+    }
+
+    string[] names =
+    {
+        "等級",
+        "力量",
+        "敏捷",
+        "智力",
+        "幸運",
+        "人氣"
+    };
+
+    int[] values =
+    {
+        reqLevel,
+        reqSTR,
+        reqDEX,
+        reqINT,
+        reqLUK,
+        reqPOP
+    };
+
+    bool[] canUse =
+    {
+        this.charStat == null ||
+            this.charStat.Level >= reqLevel,
+
+        this.charStat == null ||
+            this.charStat.Strength.GetSum() >= reqSTR,
+
+        this.charStat == null ||
+            this.charStat.Dexterity.GetSum() >= reqDEX,
+
+        this.charStat == null ||
+            this.charStat.Intelligence.GetSum() >= reqINT,
+
+        this.charStat == null ||
+            this.charStat.Luck.GetSum() >= reqLUK,
+
+        this.charStat == null ||
+            this.charStat.Pop >= reqPOP
+    };
+
+    using (Font reqFont = new Font(
+        GearGraphics.EquipDetailFont.FontFamily,
+        14f,
+        FontStyle.Bold,
+        GraphicsUnit.Pixel))
+    {
+        for (int i = 0; i < names.Length; i++)
         {
-            int value;
-            bool can;
-            NumberType type;
-            Size size;
-            //需求等级
-            this.Gear.Props.TryGetValue(GearPropType.reqLevel, out value);
-            {
-                int reduceReq;
-                if (this.Gear.Props.TryGetValue(GearPropType.reduceReq, out reduceReq))
-                {
-                    value = Math.Max(0, value - reduceReq);
-                }
-            }
-            can = this.charStat == null || this.charStat.Level >= value;
-            type = GetReqType(can, value);
-            g.DrawImage(FindReqImage(type, "reqLEV", out size), x, y);
-            DrawReqNum(g, value.ToString().PadLeft(3), (type == NumberType.Can ? NumberType.YellowNumber : type), x + 54, y, StringAlignment.Near);
+            int lineY = y + i * 20;
 
-            //需求人气
-            this.Gear.Props.TryGetValue(GearPropType.reqPOP, out value);
-            can = this.charStat == null || this.charStat.Pop >= value;
-            type = GetReqType(can, value);
-            if (value > 0)
-            {
-                g.DrawImage(FindReqImage(type, "reqPOP", out size), x + 80, y);
-                DrawReqNum(g, value.ToString("D3"), type, x + 80 + 54, y, StringAlignment.Near);
-            }
+            Color color =
+                canUse[i]
+                ? Color.White
+                : Color.FromArgb(255, 120, 120);
 
-            y += 15;
+            // 左側：名稱
+            System.Windows.Forms.TextRenderer.DrawText(
+                g,
+                names[i],
+                reqFont,
+                new Rectangle(
+                    70,
+                    lineY,
+                    55,
+                    20
+                ),
+                color,
+                System.Windows.Forms.TextFormatFlags.Right |
+                System.Windows.Forms.TextFormatFlags.VerticalCenter |
+                System.Windows.Forms.TextFormatFlags.NoPrefix |
+                System.Windows.Forms.TextFormatFlags.NoPadding
+            );
 
-            //需求力量
-            this.Gear.Props.TryGetValue(GearPropType.reqSTR, out value);
-            can = this.charStat == null || this.charStat.Strength.GetSum() >= value;
-            type = GetReqType(can, value);
-            g.DrawImage(FindReqImage(type, "reqSTR", out size), x, y);
-            DrawReqNum(g, value.ToString("D3"), type, x + 54, y, StringAlignment.Near);
-
-
-            //需求运气
-            this.Gear.Props.TryGetValue(GearPropType.reqLUK, out value);
-            can = this.charStat == null || this.charStat.Luck.GetSum() >= value;
-            type = GetReqType(can, value);
-            g.DrawImage(FindReqImage(type, "reqLUK", out size), x + 80, y);
-            DrawReqNum(g, value.ToString("D3"), type, x + 80 + 54, y, StringAlignment.Near);
-
-            y += 9;
-
-            //需求敏捷
-            this.Gear.Props.TryGetValue(GearPropType.reqDEX, out value);
-            can = this.charStat == null || this.charStat.Dexterity.GetSum() >= value;
-            type = GetReqType(can, value);
-            g.DrawImage(FindReqImage(type, "reqDEX", out size), x, y);
-            DrawReqNum(g, value.ToString("D3"), type, x + 54, y, StringAlignment.Near);
-
-            //需求智力
-            this.Gear.Props.TryGetValue(GearPropType.reqINT, out value);
-            can = this.charStat == null || this.charStat.Intelligence.GetSum() >= value;
-            type = GetReqType(can, value);
-            g.DrawImage(FindReqImage(type, "reqINT", out size), x + 80, y);
-            DrawReqNum(g, value.ToString("D3"), type, x + 80 + 54, y, StringAlignment.Near);
+            // 右側：數值
+            System.Windows.Forms.TextRenderer.DrawText(
+                g,
+                values[i].ToString(),
+                reqFont,
+                new Rectangle(
+                    135,
+                    lineY,
+                    55,
+                    20
+                ),
+                color,
+                System.Windows.Forms.TextFormatFlags.Left |
+                System.Windows.Forms.TextFormatFlags.VerticalCenter |
+                System.Windows.Forms.TextFormatFlags.NoPrefix |
+                System.Windows.Forms.TextFormatFlags.NoPadding
+            );
         }
+    }
+}
 
         private void DrawPropDiffEx(Graphics g, int x, int y)
         {
